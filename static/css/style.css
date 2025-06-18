@@ -1,18 +1,16 @@
-/* --- GLOBAL STYLES & VARIABLES --- */
+/* --- NEW: Updated Color Palette & Font --- */
 :root {
-    --primary-color: #3498db;
-    --secondary-color: #2c3e50;
+    --primary-color: #1abc9c; /* A vibrant teal */
+    --secondary-color: #34495e; /* Dark slate gray for text */
     --success-color: #2ecc71;
     --warning-color: #f39c12;
     --error-color: #e74c3c;
     --light-gray: #ecf0f1;
-    --medium-gray: #bdc3c7;
-    --dark-gray: #7f8c8d;
-    --bg-color: #f4f7f6;
-    --card-bg: #ffffff;
+    --bg-color: #f8fdfc; /* Soft mint-cream background */
+    --card-bg: rgba(255, 255, 255, 0.8); /* Semi-transparent white for the frosted glass effect */
     --font-family: 'Poppins', sans-serif;
-    --border-radius: 8px;
-    --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --border-radius: 12px; /* Slightly larger radius for a softer look */
+    --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -27,9 +25,14 @@ body {
     color: var(--secondary-color);
     line-height: 1.6;
     overflow-x: hidden;
+
+    /* --- NEW: Seamless Doodle Background Pattern --- */
+    /* This SVG is embedded directly for performance. It contains icons for documents, users, etc. */
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><g fill="none" stroke="%23dce5e4" stroke-width="1"><path d="M10 10h10v10h-10zM80 80h10v10h-10zM15 85h10v10h-10zM85 15h10v10h-10z" /><path d="M20 50 C25 40, 35 40, 40 50 S45 60, 50 50" /><path d="M60 20 L80 40 L60 60" /><circle cx="80" cy="60" r="5" /><path d="M20 75 Q30 70 40 75" /><path d="M20 20 L40 20" /><path d="M30 10 L30 30" /></g></svg>');
+    background-size: 200px 200px;
 }
 
-/* --- NEW: WELCOME OVERLAY STYLES --- */
+/* --- Animation & Visibility Helpers --- */
 #welcome-overlay {
     position: fixed;
     top: 0;
@@ -52,47 +55,25 @@ body {
     font-size: 3rem;
     font-weight: 700;
     color: var(--secondary-color);
-    /* The blinking caret effect */
     border-right: 0.15em solid var(--primary-color);
     white-space: nowrap;
     overflow: hidden;
     animation: typing 2.5s steps(30, end), blink-caret .75s step-end infinite;
 }
 
-/* --- NEW: ANIMATION KEYFRAMES --- */
-@keyframes typing {
-    from { width: 0 }
-    to { width: 100% }
-}
-
-@keyframes blink-caret {
-    from, to { border-color: transparent }
-    50% { border-color: var(--primary-color); }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+@keyframes typing { from { width: 0 } to { width: 100% } }
+@keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--primary-color); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 .anim-fade-in {
-    opacity: 0; /* Initially hidden */
+    opacity: 0;
     animation: fadeIn 0.6s ease-out forwards;
 }
 
-
-/* --- MAIN CONTENT STYLING --- */
 .container {
     max-width: 900px;
     margin: 2rem auto;
     padding: 1rem 2rem;
-    /* Initially hidden for animation */
     visibility: hidden;
     opacity: 0;
     transition: opacity 0.8s ease-in, visibility 0.8s;
@@ -103,10 +84,7 @@ body {
     opacity: 1;
 }
 
-
-.hidden {
-    display: none !important;
-}
+.hidden { display: none !important; }
 
 /* --- HEADER --- */
 .main-header {
@@ -125,14 +103,18 @@ body {
     color: var(--dark-gray);
 }
 
-/* --- FORM STYLES --- */
+/* --- NEW: "Frosted Glass" Form Card --- */
 #resume-form {
     background: var(--card-bg);
-    padding: 2rem;
+    padding: 2.5rem; /* More padding */
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    -webkit-backdrop-filter: blur(10px); /* For Safari */
+    backdrop-filter: blur(10px); /* The magic */
 }
+
 
 .form-section {
     margin-bottom: 1.5rem;
@@ -153,12 +135,13 @@ textarea {
     font-family: var(--font-family);
     font-size: 1rem;
     transition: border-color 0.3s, box-shadow 0.3s;
+    background-color: rgba(255, 255, 255, 0.5); /* Slightly transparent */
 }
 
 textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+    box-shadow: 0 0 8px rgba(26, 188, 156, 0.4);
 }
 
 /* --- DRAG & DROP ZONE --- */
@@ -169,11 +152,12 @@ textarea:focus {
     text-align: center;
     cursor: pointer;
     transition: all 0.3s;
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 #drop-zone:hover, #drop-zone.drag-over {
     border-color: var(--primary-color);
-    background-color: #f8f9fa;
+    background-color: rgba(26, 188, 156, 0.1);
     transform: scale(1.02);
 }
 
@@ -187,7 +171,6 @@ textarea:focus {
 #drop-zone:hover .drop-zone-text i {
     transform: scale(1.1);
 }
-
 
 #file-list {
     margin-top: 1rem;
@@ -217,7 +200,7 @@ textarea:focus {
 }
 
 .submit-btn:hover {
-    background-color: #2980b9;
+    background-color: #16a085; /* Darker teal */
     transform: translateY(-3px);
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
@@ -242,11 +225,7 @@ textarea:focus {
     margin: 0 auto 1rem;
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* --- RESULTS --- */
 #results-container h2 {
@@ -269,6 +248,8 @@ textarea:focus {
     border-left: 5px solid var(--primary-color);
     opacity: 0;
     animation: fadeIn 0.5s ease-out forwards;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
 }
 
 .candidate-card:hover {
@@ -285,53 +266,14 @@ textarea:focus {
     padding-bottom: 1rem;
 }
 
-.card-header .name {
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.card-header .score {
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
-.score-bar {
-    width: 100%;
-    height: 10px;
-    background-color: var(--light-gray);
-    border-radius: 5px;
-    overflow: hidden;
-    margin-top: 0.5rem;
-}
-
-.score-bar-inner {
-    height: 100%;
-    border-radius: 5px;
-    transition: width 0.5s ease-in-out;
-}
-
-.details-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-}
-
-.detail-item {
-    font-size: 0.95rem;
-}
-
-.detail-item strong {
-    color: var(--secondary-color);
-    display: block;
-    margin-bottom: 0.25rem;
-}
-
-.skills-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
+.card-header .name { font-size: 1.5rem; font-weight: 600; }
+.card-header .score { font-size: 1.5rem; font-weight: 700; }
+.score-bar { width: 100%; height: 10px; background-color: var(--light-gray); border-radius: 5px; overflow: hidden; margin-top: 0.5rem; }
+.score-bar-inner { height: 100%; border-radius: 5px; transition: width 0.5s ease-in-out; }
+.details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+.detail-item { font-size: 0.95rem; }
+.detail-item strong { color: var(--secondary-color); display: block; margin-bottom: 0.25rem; }
+.skills-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
 
 .skill-tag {
     background: var(--primary-color);
@@ -361,21 +303,10 @@ footer {
     color: var(--dark-gray);
 }
 
-
 /* --- RESPONSIVE DESIGN --- */
 @media (max-width: 768px) {
-    #typing-title {
-        font-size: 2rem;
-    }
-    .container {
-        padding: 1rem;
-    }
-    .main-header h1 {
-        font-size: 2rem;
-    }
-    .card-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
+    #typing-title { font-size: 2rem; }
+    .container { padding: 1rem; }
+    .main-header h1 { font-size: 2rem; }
+    .card-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
 }
