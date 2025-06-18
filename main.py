@@ -2,6 +2,8 @@
 import io
 import re
 import datetime
+import os
+from pathlib import Path
 from typing import List
 
 import docx
@@ -14,13 +16,25 @@ import pypdf
 
 # --- INITIALIZATION ---
 app = FastAPI(title="AI Resume Screener")
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+
+# Define the absolute path to the project's base directory
+BASE_DIR = Path(__file__).resolve().parent
+
+# Mount the 'static' directory using an absolute path for deployment reliability
+app.mount(
+    "/static",
+    StaticFiles(directory=os.path.join(BASE_DIR, "static")),
+    name="static"
+)
+
+# Point to the 'templates' directory using an absolute path
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 print("Loading NLP model...")
 # --- CHANGE THE MODEL NAME HERE ---
 similarity_model = SentenceTransformer('all-MiniLM-L6-v2')
 print("Model loaded successfully.")
+
 
 # --- NLP HELPER FUNCTIONS ---
 def extract_text_from_file(file_content: bytes, filename: str) -> str:
@@ -38,25 +52,27 @@ def extract_text_from_file(file_content: bytes, filename: str) -> str:
         print(f"Error parsing file {filename}: {e}")
     return text
 
+
 def extract_resume_details_lightweight(text: str) -> dict:
-    """
-    Extracts key details from resume text using regex and heuristics.
-    Includes advanced logic for name, experience, and education extraction.
-    """
     details = {
         "name": "Not Found", "email": "Not Found", "phone": "Not Found",
         "education": "Not Found", "experience": "Not Found", "skills": []
     }
 
     # --- Basic Info Extraction ---
-    details["email"] = (re.search(r'[\w.+-]+@[\w-]+\.[\w.-]+', text) or re.search(r'E-mail\s*:\s*([\w.+-]+@[\w-]+\.[\w.-]+)', text, re.I)).group(0) if re.search(r'[\w.+-]+@[\w-]+\.[\w.-]+', text) else "Not Found"
-    details["phone"] = (re.search(r'(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?(\d{3}[-.\s]?\d{4})', text)).group(0).strip() if re.search(r'(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?(\d{3}[-.\s]?\d{4})', text) else "Not Found"
+    details["email"] = (re.search(r'[\w.+-]+@[\w-]+\.[\w.-]+', text) or re.search(
+        r'E-mail\s*:\s*([\w.+-]+@[\w-]+\.[\w.-]+)', text, re.I)).group(0) if re.search(
+        r'[\w.+-]+@[\w-]+\.[\w.-]+', text) else "Not Found"
+    details["phone"] = (re.search(r'(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?(\d{3}[-.\s]?\d{4})', text)).group(
+        0).strip() if re.search(r'(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?(\d{3}[-.\s]?\d{4})', text) else "Not Found"
+
+    lines = [line.strip() for line in text.split('\n') if line.strip()]
 
     # --- Name Extraction ---
-    lines = [line.strip() for line in text.split('\n') if line.strip()]
     if lines:
         potential_name = lines[0]
-        if len(potential_name.split()) < 5 and '@' not in potential_name and not any(char.isdigit() for char in potential_name):
+        if len(potential_name.split()) < 5 and '@' not in potential_name and not any(
+                char.isdigit() for char in potential_name):
             details["name"] = potential_name.title()
 
     if details["name"] == "Not Found" and details["email"] != "Not Found":
@@ -80,18 +96,18 @@ def extract_resume_details_lightweight(text: str) -> dict:
             found_skills.add(skill.title())
     details["skills"] = list(found_skills)
 
-    # --- MODIFIED: Education Extraction ---
+    # --- Education Extraction ---
     education_details = "Not Found"
     degrees_pattern = r'\b(B\.?Tech|B\.?E\.?|M\.?S\.?|B\.?Sc|M\.?Sc|BBA|MBA|MCA|Ph\.?D|Bachelor[’\']?s?\s*of|Master[’\']?s?\s*of|Doctor of Philosophy)\b'
     institution_keywords = ['University', 'College', 'Institute', 'School', 'Academy']
     institution_pattern = r'\b(' + '|'.join(institution_keywords) + r')\b'
-    
+
     education_found = False
     for i, line in enumerate(lines):
         if re.search(institution_pattern, line, re.I):
-            context_lines = [lines[i-1], line] if i > 0 else [line]
+            context_lines = [lines[i - 1], line] if i > 0 else [line]
             full_detail = " ".join(context_lines)
-            
+
             if re.search(degrees_pattern, full_detail, re.I):
                 education_details = re.sub(r'\s+', ' ', full_detail).strip()
                 education_found = True
@@ -103,7 +119,6 @@ def extract_resume_details_lightweight(text: str) -> dict:
                 education_details = re.sub(r'\s+', ' ', line).strip()
                 break
     details["education"] = education_details
-
 
     # --- Experience Calculation ---
     month_map = {
@@ -117,7 +132,7 @@ def extract_resume_details_lightweight(text: str) -> dict:
         r'(?i)' + month_regex + r'\s+(\d{4})\s*[-–to]+\s*(?:(' + month_regex + r')\s+(\d{4})|(present|current|till date))',
         re.IGNORECASE
     )
-    
+
     date_ranges = date_range_regex.findall(text)
     total_months = 0
     now = datetime.datetime.now()
@@ -155,25 +170,25 @@ def extract_resume_details_lightweight(text: str) -> dict:
         details["experience"] = exp_str
     else:
         details["experience"] = "Amateur"
-        
+
     return details
 
 
 # --- API ENDPOINTS ---
-
 @app.get("/health", status_code=200)
 async def health_check():
-    """A lightweight endpoint for Render's health checks."""
     return {"status": "ok"}
+
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+
 @app.post("/api/rank_resumes/")
 async def rank_resumes(
-    job_description: str = Form(...),
-    resumes: List[UploadFile] = File(...)
+        job_description: str = Form(...),
+        resumes: List[UploadFile] = File(...)
 ):
     if not job_description or not resumes:
         return JSONResponse(status_code=400, content={"error": "Job description and at least one resume must be provided."})
@@ -181,16 +196,18 @@ async def rank_resumes(
         jd_embedding = similarity_model.encode(job_description, convert_to_tensor=True)
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Failed to process job description: {e}"})
-    
+
     ranked_candidates = []
     for resume in resumes:
         resume_content = await resume.read()
         resume_text = extract_text_from_file(resume_content, resume.filename)
-        if not resume_text.strip(): continue
-        
-        cosine_score = util.cos_sim(similarity_model.encode(resume_text, convert_to_tensor=True), jd_embedding).item()
+        if not resume_text.strip():
+            continue
+
+        cosine_score = util.cos_sim(similarity_model.encode(resume_text, convert_to_tensor=True),
+                                    jd_embedding).item()
         extracted_details = extract_resume_details_lightweight(resume_text)
-        
+
         ranked_candidates.append({
             "filename": resume.filename,
             "score": round(max(0, cosine_score) * 100, 2),

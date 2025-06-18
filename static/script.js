@@ -37,12 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function handleFiles(files) {
-        // Clear previous selections from display for new batch
-        if (fileInput.files.length > 0) {
-            selectedFiles = [];
-            fileListDisplay.innerHTML = '';
-        }
-
+        if (files.length === 0) return;
+        
+        selectedFiles = []; // Reset the list for a new selection
+        
         for (const file of files) {
             if (file.type === "application/pdf" || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
                 if (!selectedFiles.some(f => f.name === file.name)) {
@@ -56,14 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateFileList() {
         fileListDisplay.innerHTML = '';
         if (selectedFiles.length > 0) {
-            const list = document.createElement('div');
-            list.innerHTML = `<strong>Selected files:</strong>`;
+            const listContainer = document.createElement('div');
+            listContainer.innerHTML = `<strong>Selected files:</strong>`;
             selectedFiles.forEach(file => {
                 const fileItem = document.createElement('p');
                 fileItem.textContent = file.name;
-                list.appendChild(fileItem);
+                listContainer.appendChild(fileItem);
             });
-            fileListDisplay.appendChild(list);
+            fileListDisplay.appendChild(listContainer);
         }
     }
 
