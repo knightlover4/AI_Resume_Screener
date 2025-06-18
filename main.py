@@ -1,7 +1,7 @@
 # main.py
 import io
 import re
-import datetime # Added for experience calculation
+import datetime
 from typing import List
 
 import docx
@@ -41,7 +41,7 @@ def extract_text_from_file(file_content: bytes, filename: str) -> str:
 def extract_resume_details_lightweight(text: str) -> dict:
     """
     Extracts key details from resume text using regex and heuristics.
-    Includes advanced logic for name and experience extraction.
+    Includes advanced logic for name, experience, and education extraction.
     """
     details = {
         "name": "Not Found", "email": "Not Found", "phone": "Not Found",
@@ -59,14 +59,12 @@ def extract_resume_details_lightweight(text: str) -> dict:
         if len(potential_name.split()) < 5 and '@' not in potential_name and not any(char.isdigit() for char in potential_name):
             details["name"] = potential_name.title()
 
-    # MODIFIED: New name extraction logic from email if name is not found
     if details["name"] == "Not Found" and details["email"] != "Not Found":
         username = details["email"].split('@')[0]
-        name_from_email = re.sub(r'\d+', '', username) # Remove numbers
-        name_from_email = re.sub(r'[\._-]', ' ', name_from_email) # Replace separators
-        # Convert to uppercase as requested
+        name_from_email = re.sub(r'\d+', '', username)
+        name_from_email = re.sub(r'[\._-]', ' ', name_from_email)
         details["name"] = name_from_email.strip().upper()
-        if not details["name"]: # Handle cases where username was only numbers/symbols
+        if not details["name"]:
             details["name"] = "Not Found"
 
     # --- Skills Extraction ---
@@ -82,15 +80,32 @@ def extract_resume_details_lightweight(text: str) -> dict:
             found_skills.add(skill.title())
     details["skills"] = list(found_skills)
 
-    # --- Education Extraction ---
-    education_pattern = r"(?i)(education|university|college|b\.tech|bachelor of technology|b\.e|bachelor of engineering|m\.s|master of science|ph\.d)[\s:]*([^\n]+)"
-    edu_match = re.search(education_pattern, text)
-    if edu_match:
-        details["education"] = edu_match.group(2).strip()
-    else:
-        details["education"] = "Not Found"
+    # --- MODIFIED: Education Extraction ---
+    education_details = "Not Found"
+    degrees_pattern = r'\b(B\.?Tech|B\.?E\.?|M\.?S\.?|B\.?Sc|M\.?Sc|BBA|MBA|MCA|Ph\.?D|Bachelor[’\']?s?\s*of|Master[’\']?s?\s*of|Doctor of Philosophy)\b'
+    institution_keywords = ['University', 'College', 'Institute', 'School', 'Academy']
+    institution_pattern = r'\b(' + '|'.join(institution_keywords) + r')\b'
+    
+    education_found = False
+    for i, line in enumerate(lines):
+        if re.search(institution_pattern, line, re.I):
+            context_lines = [lines[i-1], line] if i > 0 else [line]
+            full_detail = " ".join(context_lines)
+            
+            if re.search(degrees_pattern, full_detail, re.I):
+                education_details = re.sub(r'\s+', ' ', full_detail).strip()
+                education_found = True
+                break
 
-    # --- MODIFIED: Experience Calculation ---
+    if not education_found:
+        for line in lines:
+            if re.search(degrees_pattern, line, re.I):
+                education_details = re.sub(r'\s+', ' ', line).strip()
+                break
+    details["education"] = education_details
+
+
+    # --- Experience Calculation ---
     month_map = {
         'jan': 1, 'january': 1, 'feb': 2, 'february': 2, 'mar': 3, 'march': 3,
         'apr': 4, 'april': 4, 'may': 5, 'jun': 6, 'june': 6, 'jul': 7, 'july': 7,
@@ -112,7 +127,6 @@ def extract_resume_details_lightweight(text: str) -> dict:
             try:
                 start_month = month_map[match[0].lower()]
                 start_year = int(match[1])
-                
                 end_month_str, end_year_str, present_keyword = match[3], match[4], match[5]
 
                 if present_keyword:
@@ -120,13 +134,13 @@ def extract_resume_details_lightweight(text: str) -> dict:
                 elif end_month_str and end_year_str:
                     end_month, end_year = month_map[end_month_str.lower()], int(end_year_str)
                 else:
-                    continue # Skip malformed range
+                    continue
 
                 duration = (end_year - start_year) * 12 + (end_month - start_month) + 1
                 if duration > 0:
                     total_months += duration
             except (KeyError, ValueError):
-                continue # Skip if month or year is invalid
+                continue
 
     if total_months > 0:
         years = total_months // 12
@@ -147,7 +161,6 @@ def extract_resume_details_lightweight(text: str) -> dict:
 
 # --- API ENDPOINTS ---
 
-# --- THIS IS THE NEW HEALTH CHECK ENDPOINT ---
 @app.get("/health", status_code=200)
 async def health_check():
     """A lightweight endpoint for Render's health checks."""
