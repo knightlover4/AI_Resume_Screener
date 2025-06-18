@@ -1,29 +1,95 @@
-// static/script.js (NEW - Detailed View Version)
-
 document.addEventListener('DOMContentLoaded', () => {
-    const uploadForm = document.getElementById('uploadForm');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const resultsSection = document.getElementById('resultsSection');
-    const resultsContainer = document.getElementById('resultsContainer');
-    const thresholdSlider = document.getElementById('thresholdSlider');
-    const thresholdValue = document.getElementById('thresholdValue');
-    const errorMessage = document.getElementById('error-message');
+    // --- DOM Elements ---
+    const form = document.getElementById('resume-form');
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('resume-files');
+    const fileListDisplay = document.getElementById('file-list');
+    const loader = document.getElementById('loader');
+    const resultsContainer = document.getElementById('results-container');
+    const resultsList = document.getElementById('results-list');
+    const errorContainer = document.getElementById('error-container');
 
-    let rankedCandidates = [];
+    let selectedFiles = [];
 
-    uploadForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        
-        const formData = new FormData(uploadForm);
-        if (!document.getElementById('resumeFiles').files.length) {
-            showError("Please select at least one resume file.");
+    // --- Drag & Drop Logic ---
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        handleFiles(files);
+    });
+    
+    fileInput.addEventListener('change', () => {
+        const files = fileInput.files;
+        handleFiles(files);
+    });
+
+    function handleFiles(files) {
+        // Clear previous selections from display for new batch
+        if (fileInput.files.length > 0) {
+            selectedFiles = [];
+            fileListDisplay.innerHTML = '';
+        }
+
+        for (const file of files) {
+            if (file.type === "application/pdf" || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+                if (!selectedFiles.some(f => f.name === file.name)) {
+                    selectedFiles.push(file);
+                }
+            }
+        }
+        updateFileList();
+    }
+    
+    function updateFileList() {
+        fileListDisplay.innerHTML = '';
+        if (selectedFiles.length > 0) {
+            const list = document.createElement('div');
+            list.innerHTML = `<strong>Selected files:</strong>`;
+            selectedFiles.forEach(file => {
+                const fileItem = document.createElement('p');
+                fileItem.textContent = file.name;
+                list.appendChild(fileItem);
+            });
+            fileListDisplay.appendChild(list);
+        }
+    }
+
+
+    // --- Form Submission Logic ---
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const jobDescription = document.getElementById('job-description').value;
+
+        if (!jobDescription.trim() || selectedFiles.length === 0) {
+            alert('Please provide a job description and at least one resume.');
             return;
         }
 
-        loadingSpinner.classList.remove('hidden');
-        resultsSection.classList.add('hidden');
-        errorMessage.classList.add('hidden');
-        resultsContainer.innerHTML = '';
+        // Show loader and hide previous results/errors
+        loader.classList.remove('hidden');
+        resultsContainer.classList.add('hidden');
+        errorContainer.classList.add('hidden');
+        
+        // Create FormData object
+        const formData = new FormData();
+        formData.append('job_description', jobDescription);
+        selectedFiles.forEach(file => {
+            formData.append('resumes', file, file.name);
+        });
 
         try {
             const response = await fetch('/api/rank_resumes/', {
@@ -32,82 +98,86 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.error || `HTTP error! status: ${response.status}`);
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
 
             const data = await response.json();
-            rankedCandidates = data.candidates || [];
-            resultsSection.classList.remove('hidden');
-            renderResults();
+            displayResults(data.candidates);
 
         } catch (error) {
-            showError(error.message);
+            console.error('Error:', error);
+            errorContainer.classList.remove('hidden');
         } finally {
-            loadingSpinner.classList.add('hidden');
+            loader.classList.add('hidden');
         }
     });
 
-    thresholdSlider.addEventListener('input', () => {
-        thresholdValue.textContent = thresholdSlider.value;
-        renderResults();
-    });
-
-    function renderResults() {
-        resultsContainer.innerHTML = '';
-        const currentThreshold = parseFloat(thresholdSlider.value);
-
-        if (rankedCandidates.length === 0) {
-            resultsContainer.innerHTML = '<p>No valid candidates found or processed.</p>';
-            return;
+    // --- Display Results ---
+    function displayResults(candidates) {
+        resultsList.innerHTML = ''; // Clear previous results
+        
+        if (candidates && candidates.length > 0) {
+            candidates.forEach(candidate => {
+                const card = createCandidateCard(candidate);
+                resultsList.appendChild(card);
+            });
+            resultsContainer.classList.remove('hidden');
+        } else {
+            errorContainer.innerHTML = '<p>No candidates could be processed or ranked.</p>';
+            errorContainer.classList.remove('hidden');
         }
-
-        rankedCandidates.forEach(candidate => {
-            const isQualified = candidate.score >= currentThreshold;
-            const statusClass = isQualified ? 'qualified' : 'disqualified';
-            const details = candidate.details;
-
-            // Generate HTML for skill tags
-            const skillsHtml = details.skills.length
-                ? details.skills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')
-                : '<span>No matching skills found</span>';
-            
-            const candidateCard = document.createElement('div');
-            candidateCard.className = `candidate-card ${statusClass}`;
-            
-            candidateCard.innerHTML = `
-                <div class="card-header">
-                    <div class="candidate-name">
-                        <span class="status-icon">${isQualified ? '✅' : '❌'}</span>
-                        <h3>${details.name}</h3>
-                    </div>
-                    <div class="candidate-score">
-                        <span>Score: <strong>${candidate.score}%</strong></span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="contact-info">
-                        <p><strong>📧 Email:</strong> ${details.email}</p>
-                        <p><strong>📞 Phone:</strong> ${details.phone}</p>
-                    </div>
-                    <div class="professional-info">
-                        <p><strong>🎓 Education:</strong> ${details.education}</p>
-                        <p><strong>💼 Experience:</strong> ${details.experience}</p>
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <h4>Matching Skills</h4>
-                    <div class="skills-container">
-                        ${skillsHtml}
-                    </div>
-                </div>
-            `;
-            resultsContainer.appendChild(candidateCard);
-        });
     }
 
-    function showError(message) {
-        errorMessage.textContent = message;
-        errorMessage.classList.remove('hidden');
+    function createCandidateCard(candidate) {
+        const card = document.createElement('div');
+        card.className = 'candidate-card';
+
+        const score = candidate.score || 0;
+        const scoreColor = getScoreColor(score);
+        card.style.borderLeftColor = scoreColor;
+
+        const skillsHtml = candidate.details.skills.length > 0
+            ? candidate.details.skills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')
+            : '<span>No specific skills found.</span>';
+
+        card.innerHTML = `
+            <div class="card-header">
+                <span class="name">${candidate.details.name || 'Name Not Found'}</span>
+                <span class="score" style="color: ${scoreColor};">${score}% Match</span>
+            </div>
+            <div class="score-bar">
+                <div class="score-bar-inner" style="width: ${score}%; background-color: ${scoreColor};"></div>
+            </div>
+            <div class="details-grid">
+                <div class="detail-item">
+                    <strong><i class="fas fa-envelope"></i> Email</strong>
+                    <span>${candidate.details.email || 'Not Found'}</span>
+                </div>
+                <div class="detail-item">
+                    <strong><i class="fas fa-briefcase"></i> Experience</strong>
+                    <span>${candidate.details.experience || 'Not Found'}</span>
+                </div>
+                <div class="detail-item">
+                    <strong><i class="fas fa-graduation-cap"></i> Education</strong>
+                    <span>${candidate.details.education || 'Not Found'}</span>
+                </div>
+                 <div class="detail-item">
+                    <strong><i class="fas fa-file-alt"></i> Original File</strong>
+                    <span>${candidate.filename}</span>
+                </div>
+            </div>
+            <div class="detail-item">
+                <strong><i class="fas fa-cogs"></i> Skills</strong>
+                <div class="skills-list">${skillsHtml}</div>
+            </div>
+        `;
+        return card;
+    }
+
+    function getScoreColor(score) {
+        if (score >= 80) return 'var(--success-color)';
+        if (score >= 60) return 'var(--primary-color)';
+        if (score >= 40) return 'var(--warning-color)';
+        return 'var(--error-color)';
     }
 });

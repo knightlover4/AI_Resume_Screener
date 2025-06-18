@@ -4,51 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Resume Screener</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> </head>
 <body>
     <div class="container">
-        <header>
-            <h1>AI-Powered Resume Screener</h1>
-            <p>Paste a job description and upload resumes (PDF or DOCX) to automatically rank candidates.</p>
+        <header class="main-header">
+            <h1>AI Resume Screener</h1>
+            <p>Optimize your hiring process by intelligently ranking candidates based on your job description.</p>
         </header>
 
         <main>
-            <form id="uploadForm">
-                <div class="form-group">
-                    <label for="jobDescription">Job Description</label>
-                    <textarea id="jobDescription" name="job_description" rows="10" placeholder="Paste the full job description here..." required></textarea>
+            <form id="resume-form">
+                <div class="form-section">
+                    <label for="job-description" class="form-label">1. Paste the Job Description</label>
+                    <textarea id="job-description" name="job_description" rows="10"
+                        placeholder="e.g., Seeking a Python developer with experience in FastAPI, Docker, and AWS..."
+                        required></textarea>
                 </div>
-                <div class="form-group">
-                    <label for="resumeFiles">Candidate Resumes (.pdf, .docx)</label>
-                    <input type="file" id="resumeFiles" name="resumes" accept=".pdf,.docx" multiple required>
+
+                <div class="form-section">
+                    <label class="form-label">2. Upload Resumes (.pdf, .docx)</label>
+                    <div id="drop-zone">
+                        <div class="drop-zone-text">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & drop files here or <strong>click to select files</strong></p>
+                        </div>
+                        <input type="file" id="resume-files" name="resumes" multiple accept=".pdf,.docx" hidden>
+                    </div>
+                    <div id="file-list"></div>
                 </div>
-                <button type="submit" class="submit-btn">Rank Candidates</button>
+
+                <button type="submit" class="submit-btn">Rank Resumes</button>
             </form>
 
-            <div id="resultsSection" class="hidden">
-                <h2>Screening Results</h2>
-                <div class="threshold-control">
-                    <label for="thresholdSlider">Qualification Threshold: <span id="thresholdValue">70</span>%</label>
-                    <input type="range" id="thresholdSlider" min="0" max="100" value="70">
-                </div>
-                <div id="resultsContainer">
-                    </div>
-            </div>
-
-            <div id="loadingSpinner" class="hidden">
+            <div id="loader" class="hidden">
                 <div class="spinner"></div>
                 <p>Analyzing resumes... This may take a moment.</p>
             </div>
-             <div id="error-message" class="error-box hidden"></div>
 
+            <div id="results-container" class="hidden">
+                <h2>Screening Results</h2>
+                <div id="results-list"></div>
+            </div>
+            
+            <div id="error-container" class="hidden">
+                 <p>An error occurred. Please check the files and try again.</p>
+            </div>
         </main>
         
         <footer>
-            <p>Built with Passion</p>
-            <p> Raja Vanka </p>
+            <p>AI Resume Screener &copy; 2025</p>
         </footer>
     </div>
-    <script src="/static/script.js"></script>
+
+    <script src="{{ url_for('static', path='/js/script.js') }}"></script>
 </body>
 </html>
