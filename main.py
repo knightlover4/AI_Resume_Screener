@@ -1,6 +1,7 @@
 # main.py
 import io
 import re
+import datetime # Added for experience calculation
 from typing import List
 
 import docx
@@ -22,14 +23,13 @@ similarity_model = SentenceTransformer('all-MiniLM-L6-v2')
 print("Model loaded successfully.")
 
 # --- NLP HELPER FUNCTIONS ---
-# (The rest of your helper functions remain the same)
 def extract_text_from_file(file_content: bytes, filename: str) -> str:
     text = ""
     try:
         if filename.endswith('.pdf'):
             pdf_file = io.BytesIO(file_content)
             reader = pypdf.PdfReader(pdf_file)
-            text = "".join(page.extract_text() for page in reader.pages)
+            text = "".join(page.extract_text() for page in reader.pages if page.extract_text())
         elif filename.endswith('.docx'):
             doc_file = io.BytesIO(file_content)
             document = docx.Document(doc_file)
@@ -39,19 +39,37 @@ def extract_text_from_file(file_content: bytes, filename: str) -> str:
     return text
 
 def extract_resume_details_lightweight(text: str) -> dict:
+    """
+    Extracts key details from resume text using regex and heuristics.
+    Includes advanced logic for name and experience extraction.
+    """
     details = {
         "name": "Not Found", "email": "Not Found", "phone": "Not Found",
         "education": "Not Found", "experience": "Not Found", "skills": []
     }
+
+    # --- Basic Info Extraction ---
     details["email"] = (re.search(r'[\w.+-]+@[\w-]+\.[\w.-]+', text) or re.search(r'E-mail\s*:\s*([\w.+-]+@[\w-]+\.[\w.-]+)', text, re.I)).group(0) if re.search(r'[\w.+-]+@[\w-]+\.[\w.-]+', text) else "Not Found"
     details["phone"] = (re.search(r'(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?(\d{3}[-.\s]?\d{4})', text)).group(0).strip() if re.search(r'(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?(\d{3}[-.\s]?\d{4})', text) else "Not Found"
+
+    # --- Name Extraction ---
     lines = [line.strip() for line in text.split('\n') if line.strip()]
     if lines:
         potential_name = lines[0]
-        if len(potential_name.split()) < 5:
-            details["name"] = potential_name
+        if len(potential_name.split()) < 5 and '@' not in potential_name and not any(char.isdigit() for char in potential_name):
+            details["name"] = potential_name.title()
+
+    # MODIFIED: New name extraction logic from email if name is not found
     if details["name"] == "Not Found" and details["email"] != "Not Found":
-        details["name"] = details["email"].split('@')[0].replace('.', ' ').replace('_', ' ').title()
+        username = details["email"].split('@')[0]
+        name_from_email = re.sub(r'\d+', '', username) # Remove numbers
+        name_from_email = re.sub(r'[\._-]', ' ', name_from_email) # Replace separators
+        # Convert to uppercase as requested
+        details["name"] = name_from_email.strip().upper()
+        if not details["name"]: # Handle cases where username was only numbers/symbols
+            details["name"] = "Not Found"
+
+    # --- Skills Extraction ---
     SKILLS_LIST = [
         'python', 'java', 'c++', 'javascript', 'sql', 'pandas', 'numpy', 'scikit-learn',
         'tensorflow', 'pytorch', 'keras', 'nlp', 'streamlit', 'flask', 'fastapi',
@@ -63,15 +81,67 @@ def extract_resume_details_lightweight(text: str) -> dict:
         if re.search(r'\b' + re.escape(skill) + r'\b', text, re.IGNORECASE):
             found_skills.add(skill.title())
     details["skills"] = list(found_skills)
+
+    # --- Education Extraction ---
     education_pattern = r"(?i)(education|university|college|b\.tech|bachelor of technology|b\.e|bachelor of engineering|m\.s|master of science|ph\.d)[\s:]*([^\n]+)"
     edu_match = re.search(education_pattern, text)
     if edu_match:
         details["education"] = edu_match.group(2).strip()
     else:
         details["education"] = "Not Found"
-    experience_match = re.search(r'(?i)(experience|work history|employment).*', text)
-    if experience_match:
-        details["experience"] = experience_match.group(0).split('\n')[0][:100]
+
+    # --- MODIFIED: Experience Calculation ---
+    month_map = {
+        'jan': 1, 'january': 1, 'feb': 2, 'february': 2, 'mar': 3, 'march': 3,
+        'apr': 4, 'april': 4, 'may': 5, 'jun': 6, 'june': 6, 'jul': 7, 'july': 7,
+        'aug': 8, 'august': 8, 'sep': 9, 'september': 9, 'oct': 10, 'october': 10,
+        'nov': 11, 'november': 11, 'dec': 12, 'december': 12
+    }
+    month_regex = r'(' + '|'.join(month_map.keys()) + r')'
+    date_range_regex = re.compile(
+        r'(?i)' + month_regex + r'\s+(\d{4})\s*[-–to]+\s*(?:(' + month_regex + r')\s+(\d{4})|(present|current|till date))',
+        re.IGNORECASE
+    )
+    
+    date_ranges = date_range_regex.findall(text)
+    total_months = 0
+    now = datetime.datetime.now()
+
+    if date_ranges:
+        for match in date_ranges:
+            try:
+                start_month = month_map[match[0].lower()]
+                start_year = int(match[1])
+                
+                end_month_str, end_year_str, present_keyword = match[3], match[4], match[5]
+
+                if present_keyword:
+                    end_month, end_year = now.month, now.year
+                elif end_month_str and end_year_str:
+                    end_month, end_year = month_map[end_month_str.lower()], int(end_year_str)
+                else:
+                    continue # Skip malformed range
+
+                duration = (end_year - start_year) * 12 + (end_month - start_month) + 1
+                if duration > 0:
+                    total_months += duration
+            except (KeyError, ValueError):
+                continue # Skip if month or year is invalid
+
+    if total_months > 0:
+        years = total_months // 12
+        months = total_months % 12
+        exp_str = ""
+        if years > 0:
+            exp_str += f"{years} year{'s' if years > 1 else ''}"
+        if months > 0:
+            if exp_str:
+                exp_str += " and "
+            exp_str += f"{months} month{'s' if months > 1 else ''}"
+        details["experience"] = exp_str
+    else:
+        details["experience"] = "Amateur"
+        
     return details
 
 
