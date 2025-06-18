@@ -1,0 +1,17 @@
+# render.yaml
+services:
+  - type: web
+    name: resume-screener
+    env: docker
+    plan: free
+    
+    dockerfilePath: ./Dockerfile
+    
+    # --- THIS IS THE KEY NEW LINE ---
+    # Tell Render to use our new lightweight health check endpoint
+    healthCheckPath: /health
+    # --- END NEW LINE ---
+    
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8

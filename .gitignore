@@ -1,0 +1,22 @@
+# .gitignore
+
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code specific files
+.vscode/
+
+# Cache directory used by sentence-transformers
+.cache/
+
+# Operating System generated files
+.DS_Store
+Thumbs.db

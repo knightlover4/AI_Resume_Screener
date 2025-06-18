@@ -1,0 +1,20 @@
+# requirements.txt (Optimized for Size)
+
+# --- Force pip to use the smaller, CPU-only version of PyTorch ---
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# --- Core ML & App Dependencies ---
+fastapi
+uvicorn[standard]
+python-multipart
+sentence-transformers
+pypdf
+jinja2
+python-docx
+gunicorn # Explicitly add gunicorn for the Docker CMD
+
+# --- The libraries below are automatically installed by sentence-transformers ---
+# --- but we specify them here to ensure lean versions are prioritized. ---
+torch
+torchvision
+torchaudio

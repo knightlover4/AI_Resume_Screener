@@ -1,0 +1,219 @@
+/* static/style.css (NEW - With Mobile Responsiveness) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+:root {
+    --primary-color: #6a5acd; /* SlateBlue */
+    --primary-hover: #483d8b; /* DarkSlateBlue */
+    --light-gray: #f8f9fa;
+    --medium-gray: #e9ecef;
+    --dark-gray: #343a40;
+    --text-color: #495057;
+    --border-color: #dee2e6;
+    --qualified-bg: #e6f4ea;
+    --qualified-border: #28a745;
+    --disqualified-bg: #fce8e6;
+    --disqualified-border: #dc3545;
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* General Body and Container Styles */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--light-gray);
+    color: var(--text-color);
+    margin: 0;
+    padding: 1rem; /* Adjusted default padding for better mobile experience */
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+}
+
+header {
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    color: var(--dark-gray);
+    margin-bottom: 0.5rem;
+    font-size: 2rem; /* Base font size */
+}
+
+/* Form Styles */
+.form-group { margin-bottom: 1.5rem; }
+label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--dark-gray); }
+textarea, input[type="file"] { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; box-sizing: border-box; }
+textarea { resize: vertical; }
+.submit-btn { display: block; width: 100%; padding: 0.85rem; font-size: 1.1rem; font-weight: 700; color: #fff; background-color: var(--primary-color); border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.2s ease; }
+.submit-btn:hover { background-color: var(--primary-hover); }
+
+/* Utility Styles */
+.hidden { display: none; }
+#loadingSpinner { text-align: center; padding: 2rem; }
+.spinner { border: 6px solid var(--medium-gray); border-top: 6px solid var(--primary-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.error-box { color: var(--disqualified-border); background-color: var(--disqualified-bg); border: 1px solid var(--disqualified-border); padding: 1rem; border-radius: 4px; margin-top: 1rem; text-align: center; }
+
+/* --- CARD STYLES --- */
+#resultsSection {
+    margin-top: 2rem;
+}
+
+.threshold-control {
+    background-color: var(--light-gray);
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+#thresholdSlider {
+    width: 100%;
+    cursor: pointer;
+}
+
+.candidate-card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--card-shadow);
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+.candidate-card.qualified {
+    border-left: 5px solid var(--qualified-border);
+}
+
+.candidate-card.disqualified {
+    border-left: 5px solid var(--disqualified-border);
+}
+
+.card-header, .card-body, .card-footer {
+    padding: 1rem 1.5rem;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.candidate-name {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.candidate-name h3 {
+    margin: 0;
+    color: var(--dark-gray);
+    font-size: 1.25rem;
+}
+
+.status-icon {
+    font-size: 1.5rem;
+}
+
+.candidate-score strong {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+}
+
+.card-body {
+    display: grid;
+    /* This is the key part for desktop: 2 columns */
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.card-body p {
+    margin: 0.5rem 0;
+    line-height: 1.5;
+    word-break: break-word; /* Helps prevent long emails from overflowing */
+}
+
+.card-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid var(--border-color);
+}
+
+.card-footer h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--dark-gray);
+}
+
+.skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.skill-tag {
+    background-color: var(--medium-gray);
+    color: var(--dark-gray);
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/*
+ =========================================
+   MOBILE RESPONSIVENESS FIXES
+ =========================================
+*/
+
+/* These styles will apply only on screens 768px wide or smaller */
+@media (max-width: 768px) {
+    body {
+        padding: 0; /* Remove body padding on mobile */
+    }
+
+    .container {
+        padding: 1rem; /* Reduce container padding */
+        border-radius: 0; /* Full-width on mobile */
+        box-shadow: none;
+    }
+
+    h1 {
+        font-size: 1.5rem; /* Reduce main heading size */
+    }
+
+    .card-header {
+        /* Stack header items vertically */
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .card-body {
+        /* This is the most important fix: change to a single column */
+        grid-template-columns: 1fr;
+        gap: 0.5rem; /* Reduce gap between rows */
+    }
+
+    .card-header, .card-body, .card-footer {
+        padding: 1rem; /* Reduce padding inside cards */
+    }
+}

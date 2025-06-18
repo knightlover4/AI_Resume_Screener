@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Screener</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI-Powered Resume Screener</h1>
+            <p>Paste a job description and upload resumes (PDF or DOCX) to automatically rank candidates.</p>
+        </header>
+
+        <main>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="jobDescription">Job Description</label>
+                    <textarea id="jobDescription" name="job_description" rows="10" placeholder="Paste the full job description here..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="resumeFiles">Candidate Resumes (.pdf, .docx)</label>
+                    <input type="file" id="resumeFiles" name="resumes" accept=".pdf,.docx" multiple required>
+                </div>
+                <button type="submit" class="submit-btn">Rank Candidates</button>
+            </form>
+
+            <div id="resultsSection" class="hidden">
+                <h2>Screening Results</h2>
+                <div class="threshold-control">
+                    <label for="thresholdSlider">Qualification Threshold: <span id="thresholdValue">70</span>%</label>
+                    <input type="range" id="thresholdSlider" min="0" max="100" value="70">
+                </div>
+                <div id="resultsContainer">
+                    </div>
+            </div>
+
+            <div id="loadingSpinner" class="hidden">
+                <div class="spinner"></div>
+                <p>Analyzing resumes... This may take a moment.</p>
+            </div>
+             <div id="error-message" class="error-box hidden"></div>
+
+        </main>
+        
+        <footer>
+            <p>Built with Passion</p>
+            <p> Raja Vanka </p>
+        </footer>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>
