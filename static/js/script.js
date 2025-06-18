@@ -1,4 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- NEW: Landing Animation Logic ---
+    const welcomeOverlay = document.getElementById('welcome-overlay');
+    const mainContent = document.getElementById('main-content');
+    const typingTitle = document.getElementById('typing-title');
+    const fullTitle = "AI Resume Screener";
+    typingTitle.textContent = fullTitle; // Set text for animation calculation in CSS
+
+    // After animations complete, show the main content
+    setTimeout(() => {
+        // Fade out the welcome overlay
+        welcomeOverlay.style.opacity = '0';
+        // Make the main content visible and start its animations
+        mainContent.classList.add('visible');
+        
+        // Remove the overlay from the DOM after it has faded out
+        setTimeout(() => {
+            welcomeOverlay.style.display = 'none';
+        }, 800); // Should match the transition duration in CSS
+    }, 3500); // Duration of the typing + blinking animation
+
     // --- DOM Elements ---
     const form = document.getElementById('resume-form');
     const dropZone = document.getElementById('drop-zone');
@@ -115,8 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsList.innerHTML = ''; // Clear previous results
         
         if (candidates && candidates.length > 0) {
-            candidates.forEach(candidate => {
+            // Apply staggered animation to result cards
+            candidates.forEach((candidate, index) => {
                 const card = createCandidateCard(candidate);
+                card.style.animationDelay = `${index * 0.1}s`;
                 resultsList.appendChild(card);
             });
             resultsContainer.classList.remove('hidden');

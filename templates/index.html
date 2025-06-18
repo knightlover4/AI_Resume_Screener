@@ -8,24 +8,31 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> </head>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
 <body>
-    <div class="container">
-        <header class="main-header">
+    <div id="welcome-overlay">
+        <div class="typing-container">
+            <h1 id="typing-title"></h1>
+        </div>
+    </div>
+
+    <div class="container" id="main-content">
+        <header class="main-header anim-fade-in">
             <h1>AI Resume Screener</h1>
             <p>Optimize your hiring process by intelligently ranking candidates based on your job description.</p>
         </header>
 
         <main>
-            <form id="resume-form">
-                <div class="form-section">
+            <form id="resume-form" class="anim-fade-in" style="animation-delay: 0.2s;">
+                <div class="form-section anim-fade-in" style="animation-delay: 0.4s;">
                     <label for="job-description" class="form-label">1. Paste the Job Description</label>
                     <textarea id="job-description" name="job_description" rows="10"
                         placeholder="e.g., Seeking a Python developer with experience in FastAPI, Docker, and AWS..."
                         required></textarea>
                 </div>
 
-                <div class="form-section">
+                <div class="form-section anim-fade-in" style="animation-delay: 0.6s;">
                     <label class="form-label">2. Upload Resumes (.pdf, .docx)</label>
                     <div id="drop-zone">
                         <div class="drop-zone-text">
@@ -37,7 +44,7 @@
                     <div id="file-list"></div>
                 </div>
 
-                <button type="submit" class="submit-btn">Rank Resumes</button>
+                <button type="submit" class="submit-btn anim-fade-in" style="animation-delay: 0.8s;">Rank Resumes</button>
             </form>
 
             <div id="loader" class="hidden">
@@ -55,7 +62,7 @@
             </div>
         </main>
 
-        <footer>
+        <footer class="anim-fade-in" style="animation-delay: 1s;">
             <p>AI Resume Screener &copy; 2025</p>
         </footer>
     </div>
